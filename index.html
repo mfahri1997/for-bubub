@@ -653,43 +653,54 @@ function defaultConfig() {
 let config = defaultConfig();
 
 // =============================================
-// INDEXED DB — untuk simpan audio blob besar
+// GIST STORAGE
 // =============================================
-const DB_NAME = 'bdayDB', DB_VER = 1, STORE = 'files';
-let db = null;
+const GIST_ID_KEY = 'bday_gist_id';
 
-function openDB() {
-  return new Promise((res, rej) => {
-    if (db) return res(db);
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
-    req.onsuccess = e => { db = e.target.result; res(db); };
-    req.onerror = () => rej(req.error);
+function getGistId() { return localStorage.getItem(GIST_ID_KEY) || ''; }
+
+async function gistLoad() {
+  const id = getGistId();
+  if (!id) throw new Error('NO_GIST_ID');
+  const res = await fetch(`https://api.github.com/gists/${id}`, {
+    headers: { 'Accept': 'application/vnd.github+json' }
   });
+  if (!res.ok) throw new Error('FETCH_FAIL_' + res.status);
+  const data = await res.json();
+  const file = data.files['birthday-config.json'];
+  if (!file) throw new Error('FILE_NOT_FOUND');
+  return JSON.parse(file.content || '{}');
 }
 
-function dbGet(key) {
-  return openDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readonly');
-    const req = tx.objectStore(STORE).get(key);
-    req.onsuccess = () => res(req.result);
-    req.onerror = () => rej(req.error);
-  }));
-}
-
-// Load from localStorage (metadata only, no audio blob)
-function loadConfig() {
+// Load config: prioritas dari Gist, fallback localStorage
+async function loadConfig() {
+  // Try Gist first
+  try {
+    const remote = await gistLoad();
+    if (remote && Object.keys(remote).length > 0) {
+      config = Object.assign(defaultConfig(), remote);
+      // Cache locally
+      try { localStorage.setItem('bday_config', JSON.stringify(config)); } catch(_) {}
+      return;
+    }
+  } catch(e) {
+    console.warn('Gist load failed, using local cache:', e.message);
+  }
+  // Fallback to localStorage
   try {
     const saved = localStorage.getItem('bday_config');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Strip audio blob from config if it was accidentally saved there
       if (parsed.music && parsed.music.url && parsed.music.url.startsWith('data:audio')) {
         parsed.music.url = '';
       }
       config = Object.assign(defaultConfig(), parsed);
     }
   } catch(e) {}
+}
+
+function saveConfig() {
+  try { localStorage.setItem('bday_config', JSON.stringify(config)); } catch(e) {}
 }
 
 function applyConfig() {
@@ -707,28 +718,17 @@ function applyConfig() {
     img.style.display = 'block';
   }
 
-  // Music — load dari IndexedDB (blob besar)
+  // Music — load dari URL
   const musicTitle = (config.music && config.music.title) || 'Musik Cinta';
   document.getElementById('music-title').textContent = musicTitle;
 
-  dbGet('audio').then(blob => {
-    if (!blob) return; // belum ada musik
-    const url = URL.createObjectURL(blob);
+  if (config.music && config.music.url && !config.music.url.startsWith('data:')) {
     const aud = document.getElementById('bg-music');
-    aud.src = url;
+    aud.src = config.music.url;
     aud.load();
     document.getElementById('music-bar').style.display = 'flex';
     musicReady = true;
-  }).catch(() => {
-    // Fallback: coba dari config.music.url kalau ada (URL eksternal)
-    if (config.music && config.music.url && !config.music.url.startsWith('data:')) {
-      const aud = document.getElementById('bg-music');
-      aud.src = config.music.url;
-      aud.load();
-      document.getElementById('music-bar').style.display = 'flex';
-      musicReady = true;
-    }
-  });
+  }
 
   // Messages
   const sec = document.getElementById('messages-section');
@@ -1042,10 +1042,14 @@ function toggleMusic() {
 // =============================================
 // INIT
 // =============================================
-loadConfig();
 spawnFlowers();
-applyConfig();
 updateDots();
+// Load config async (dari Gist atau localStorage)
+loadConfig().then(() => {
+  applyConfig();
+}).catch(() => {
+  applyConfig(); // pakai default
+});
 </script>
 </body>
 </html>

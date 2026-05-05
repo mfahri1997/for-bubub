@@ -61,6 +61,43 @@
   .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(201,151,26,0.5); }
   .login-err { color: #FF4444; font-size: 13px; margin-top: 8px; display: none; }
 
+  /* SETUP GIST */
+  #setup-gist {
+    display: none;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FFFDF0, #FFF3B0, #FFE4EC);
+    padding: 20px;
+  }
+  .setup-box {
+    background: white;
+    border: 2px solid var(--gold);
+    border-radius: 24px;
+    padding: 40px 36px;
+    max-width: 520px; width: 100%;
+    box-shadow: 0 8px 40px rgba(245,200,66,0.25);
+  }
+  .setup-box h2 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--brown); margin-bottom: 8px; }
+  .setup-step {
+    background: var(--gold-light);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 14px;
+    color: var(--brown);
+  }
+  .setup-step a { color: var(--gold-dark); font-weight: 600; }
+  .setup-note {
+    background: #FFF0F0;
+    border: 1px solid #FFB3B3;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #993333;
+    margin: 12px 0;
+  }
+
   /* ADMIN PANEL */
   #admin-panel { display: none; }
   
@@ -73,7 +110,7 @@
     box-shadow: 0 2px 12px rgba(245,200,66,0.15);
   }
   .admin-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--brown); display: flex; align-items: center; gap: 10px; }
-  .admin-actions { display: flex; gap: 10px; }
+  .admin-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .btn-save {
     background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     color: white; border: none; padding: 10px 24px;
@@ -83,6 +120,7 @@
     display: flex; align-items: center; gap: 6px;
   }
   .btn-save:hover { transform: translateY(-1px); }
+  .btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .btn-preview {
     background: white; color: var(--gold-dark);
     border: 1.5px solid var(--gold); padding: 10px 20px;
@@ -200,15 +238,6 @@
   .photo-caption { font-size: 14px; color: var(--text-light); }
   #admin-photo-input { display: none; }
 
-  /* MUSIC SECTION */
-  .music-tabs { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .music-tab {
-    flex: 1; padding: 8px; text-align: center; cursor: pointer;
-    font-size: 13px; color: var(--text-light); background: var(--cream);
-    transition: all 0.2s; border: none; font-family: 'DM Sans', sans-serif;
-  }
-  .music-tab.active { background: var(--gold); color: white; font-weight: 500; }
-
   /* SAVE TOAST */
   .toast {
     position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -216,6 +245,7 @@
     border-radius: 50px; font-size: 14px; z-index: 9999;
     transition: transform 0.3s ease;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    max-width: 90vw; text-align: center;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -241,7 +271,6 @@
   .badge-live { background: #DCFCE7; color: #166534; }
   .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-  /* RESET BTN */
   .btn-reset {
     background: none; border: 1px solid #ddd; color: #bbb;
     padding: 8px 16px; border-radius: 8px; cursor: pointer;
@@ -249,9 +278,40 @@
     margin-top: 16px; transition: all 0.2s;
   }
   .btn-reset:hover { color: var(--rose); border-color: var(--rose); }
+
+  /* Gist status */
+  .gist-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .gist-status.ok { background: #DCFCE7; color: #166534; }
+  .gist-status.err { background: #FEE2E2; color: #991B1B; }
+  .gist-status.loading { background: var(--gold-light); color: var(--gold-dark); }
+
+  /* Loading overlay */
+  #loading-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(255,253,240,0.85);
+    z-index: 9998;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: var(--brown);
+  }
+  .spin { animation: spinAnim 1s linear infinite; font-size: 36px; }
+  @keyframes spinAnim { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
+
+<div id="loading-overlay">
+  <div class="spin">🌸</div>
+  <div id="loading-msg">Memuat...</div>
+</div>
 
 <!-- ADMIN LOGIN -->
 <div id="admin-login">
@@ -259,10 +319,48 @@
     <div style="font-size:48px; margin-bottom:16px">🔐</div>
     <h1>Admin Panel</h1>
     <p>Masukkan password admin untuk mengakses pengaturan</p>
-    <input type="password" class="login-input" id="admin-pass" placeholder="Password Admin" onkeydown="if(event.key==='Enter')adminLogin()">
+    <input type="password" class="login-input" id="admin-pass" placeholder="Password Admin">
     <button class="login-btn" onclick="adminLogin()">Masuk →</button>
     <div class="login-err" id="admin-err">Password salah! Coba lagi.</div>
     <p style="font-size:11px;color:#ccc;margin-top:20px">Default: admin123</p>
+  </div>
+</div>
+
+<!-- SETUP GIST (first time) -->
+<div id="setup-gist">
+  <div class="setup-box">
+    <div style="font-size:40px;margin-bottom:12px">☁️</div>
+    <h2>Setup Penyimpanan Online</h2>
+    <p style="font-size:14px;color:var(--text-light);margin:8px 0 20px">Supaya setting tidak hilang saat dibuka di device lain, kita perlu GitHub Gist sebagai penyimpanan. Lakukan sekali saja!</p>
+
+    <div class="setup-step">
+      <strong>Langkah 1:</strong> Buka <a href="https://gist.github.com" target="_blank">gist.github.com</a> dan buat Gist baru.<br>
+      Isi file name: <code>birthday-config.json</code><br>
+      Isi konten: <code>{}</code><br>
+      Pilih <strong>"Create secret gist"</strong>, lalu klik tombol buat.
+    </div>
+
+    <div class="setup-step">
+      <strong>Langkah 2:</strong> Dari URL Gist kamu (contoh: <code>https://gist.github.com/usermu/<strong>abc123...</strong></code>), copy bagian ID-nya (huruf panjang di akhir URL).
+    </div>
+
+    <div class="setup-step">
+      <strong>Langkah 3:</strong> Buat GitHub Token di <a href="https://github.com/settings/tokens/new" target="_blank">settings/tokens/new</a>.<br>
+      Centang scope: <strong>gist</strong> — lalu klik Generate Token dan copy hasilnya.
+    </div>
+
+    <div class="setup-note">
+      ⚠️ Token GitHub hanya ditampilkan sekali. Simpan dulu sebelum menutup halaman GitHub.
+    </div>
+
+    <label>Gist ID</label>
+    <input type="text" id="setup-gist-id" placeholder="abc123def456...">
+
+    <label>GitHub Token</label>
+    <input type="password" id="setup-gh-token" placeholder="ghp_xxxx...">
+
+    <button class="login-btn" style="margin-top:20px" onclick="saveGistSetup()">Simpan & Lanjutkan →</button>
+    <div style="margin-top:10px;font-size:12px;color:#bbb;text-align:center">Token disimpan di browser kamu saja (localStorage), tidak dikirim ke mana pun kecuali ke GitHub.</div>
   </div>
 </div>
 
@@ -275,7 +373,7 @@
     </div>
     <div class="admin-actions">
       <button class="btn-preview" onclick="window.open('index.html','_blank')">👀 Preview</button>
-      <button class="btn-save" onclick="saveAll()">💾 Simpan Semua</button>
+      <button class="btn-save" id="btn-save-main" onclick="saveAll()">💾 Simpan Semua</button>
       <button class="btn-logout" onclick="adminLogout()">Keluar</button>
     </div>
   </div>
@@ -287,7 +385,7 @@
       <div class="section-title">💛 Identitas</div>
       
       <label>Nama Pacar</label>
-      <input type="text" id="cfg-name" placeholder="Nama pacar kamu..." value="">
+      <input type="text" id="cfg-name" placeholder="Nama pacar kamu...">
 
       <div class="row2">
         <div>
@@ -323,7 +421,7 @@
         <img id="admin-photo-preview" alt="Preview">
         <div id="admin-photo-placeholder">
           <div class="photo-placeholder-txt">🌸</div>
-          <div class="photo-caption">Klik untuk upload foto<br><small style="color:#bbb">JPG, PNG, WEBP (maks 5MB)</small></div>
+          <div class="photo-caption">Klik untuk upload foto<br><small style="color:#bbb">JPG, PNG, WEBP (maks 2MB untuk Gist)</small></div>
         </div>
       </div>
       <input type="file" id="admin-photo-input" accept="image/*" onchange="handleAdminPhoto(event)">
@@ -333,34 +431,13 @@
     <!-- MUSIK -->
     <div class="section-card">
       <div class="section-title">🎵 Musik Latar</div>
-      <div class="music-tabs">
-        <button class="music-tab active" id="tab-file-btn" onclick="switchMusicTab('file', this)">⭐ Upload File (Rekomendasi)</button>
-        <button class="music-tab" id="tab-url-btn" onclick="switchMusicTab('url', this)">Link URL</button>
+      <div style="background:#FFF0F0;border:1px solid #FFB3B3;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#993333">
+        ℹ️ Gunakan <strong>link URL langsung</strong> ke file audio (MP3). Bisa upload ke Google Drive (set akses "Anyone with link") atau gunakan layanan hosting audio.
       </div>
-      
-      <!-- TAB: UPLOAD FILE (recommended) -->
-      <div id="music-file-tab">
-        <div style="background:#FFF8E1;border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--brown)">
-          ⭐ <strong>Direkomendasikan:</strong> Upload file MP3 langsung agar musik pasti bisa diputar di semua browser tanpa masalah CORS.
-        </div>
-        <div class="photo-upload-area" onclick="document.getElementById('admin-music-input').click()" style="padding:20px">
-          <div class="photo-placeholder-txt" style="font-size:28px">🎵</div>
-          <div class="photo-caption" id="music-filename">Klik untuk upload MP3 / OGG / WAV<br><small style="color:#bbb">Maks ~10MB. File disimpan di browser.</small></div>
-        </div>
-        <input type="file" id="admin-music-input" accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4,audio/*" style="display:none" onchange="handleMusicFile(event)">
-        <audio id="music-preview" controls style="width:100%;margin-top:10px;border-radius:8px;display:none"></audio>
-        <button class="add-btn" id="music-clear-btn" onclick="clearMusic()" style="display:none;margin-top:6px">🗑️ Hapus Musik</button>
-      </div>
-
-      <!-- TAB: URL -->
-      <div id="music-url-tab" style="display:none">        <div style="background:#FFF0F0;border:1px solid #FFB3B3;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#993333">
-          ⚠️ <strong>Catatan:</strong> URL eksternal sering diblokir browser (CORS). Gunakan URL yang <em>benar-benar direct link</em> ke file audio (bukan halaman streaming).
-        </div>
-        <label>Direct URL ke file audio (MP3/OGG)</label>
-        <input type="url" id="cfg-music-url" placeholder="https://example.com/lagu.mp3">
-        <button class="add-btn" onclick="testMusicUrl()" style="margin-top:8px">▶ Test Putar URL</button>
-        <audio id="music-url-preview" controls style="width:100%;margin-top:8px;border-radius:8px;display:none"></audio>
-      </div>
+      <label>Direct URL ke file audio (MP3/OGG)</label>
+      <input type="url" id="cfg-music-url" placeholder="https://example.com/lagu.mp3">
+      <button class="add-btn" onclick="testMusicUrl()" style="margin-top:8px">▶ Test Putar URL</button>
+      <audio id="music-url-preview" controls style="width:100%;margin-top:8px;border-radius:8px;display:none"></audio>
 
       <label style="margin-top:16px">Judul Lagu (ditampilkan di website)</label>
       <input type="text" id="cfg-music-title" placeholder="Nama lagu / judul musik">
@@ -395,14 +472,17 @@
       <button class="btn-save" style="margin-top:16px;width:100%;justify-content:center" onclick="changeAdminPass()">Ganti Password</button>
     </div>
 
-    <!-- RESET -->
+    <!-- GIST CONFIG -->
     <div class="section-card">
-      <div class="section-title">⚙️ Utilitas</div>
-      <p style="font-size:14px;color:var(--text-light);margin-bottom:16px">Kelola data website birthday</p>
-      <button class="btn-preview" style="width:100%;justify-content:center;margin-bottom:10px" onclick="exportConfig()">📤 Export Config (JSON)</button>
-      <label for="import-file" style="display:block">Import Config (JSON)</label>
-      <input type="file" id="import-file" accept=".json" onchange="importConfig(event)">
-      <button class="btn-reset" onclick="resetAll()" style="color:#FF4444;border-color:#FF4444">🗑️ Reset Semua ke Default</button>
+      <div class="section-title">☁️ Pengaturan Penyimpanan</div>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:12px">Data disimpan di GitHub Gist sehingga semua device bisa membacanya.</p>
+      <label>Gist ID</label>
+      <input type="text" id="gist-id-input" placeholder="abc123...">
+      <label>GitHub Token</label>
+      <input type="password" id="gh-token-input" placeholder="ghp_xxxx...">
+      <div id="gist-conn-status" class="gist-status loading" style="display:none">Mengecek koneksi...</div>
+      <button class="btn-save" style="margin-top:12px;width:100%;justify-content:center" onclick="updateGistSettings()">Perbarui Pengaturan</button>
+      <button class="btn-reset" onclick="resetAll()">🗑️ Reset Semua ke Default</button>
     </div>
 
   </div>
@@ -412,11 +492,61 @@
 
 <script>
 // =============================================
-// CONFIG DEFAULTS
+// STORAGE KEYS
 // =============================================
 const ADMIN_PASS_KEY = 'bday_admin_pass';
-const CONFIG_KEY = 'bday_config';
+const CONFIG_KEY     = 'bday_config';
+const GIST_ID_KEY    = 'bday_gist_id';
+const GH_TOKEN_KEY   = 'bday_gh_token';
 
+// =============================================
+// GIST HELPERS
+// =============================================
+function getGistId()   { return localStorage.getItem(GIST_ID_KEY) || ''; }
+function getGhToken()  { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
+
+async function gistLoad() {
+  const id = getGistId();
+  if (!id) throw new Error('NO_GIST_ID');
+  const res = await fetch(`https://api.github.com/gists/${id}`, {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  });
+  if (!res.ok) throw new Error('FETCH_FAIL_' + res.status);
+  const data = await res.json();
+  const file = data.files['birthday-config.json'];
+  if (!file) throw new Error('FILE_NOT_FOUND');
+  return JSON.parse(file.content || '{}');
+}
+
+async function gistSave(configObj) {
+  const id    = getGistId();
+  const token = getGhToken();
+  if (!id || !token) throw new Error('NO_CREDENTIALS');
+  const res = await fetch(`https://api.github.com/gists/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      files: {
+        'birthday-config.json': {
+          content: JSON.stringify(configObj, null, 2)
+        }
+      }
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.message || 'SAVE_FAIL_' + res.status);
+  }
+  return true;
+}
+
+// =============================================
+// CONFIG DEFAULTS
+// =============================================
 function getAdminPass() {
   return localStorage.getItem(ADMIN_PASS_KEY) || 'admin123';
 }
@@ -442,17 +572,6 @@ function defaultConfig() {
 
 let config = defaultConfig();
 
-function loadConfig() {
-  try {
-    const s = localStorage.getItem(CONFIG_KEY);
-    if (s) config = Object.assign(defaultConfig(), JSON.parse(s));
-  } catch(e) {}
-}
-
-function saveConfig() {
-  try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch(e) {}
-}
-
 // =============================================
 // ADMIN LOGIN
 // =============================================
@@ -460,9 +579,12 @@ function adminLogin() {
   const pass = document.getElementById('admin-pass').value;
   if (pass === getAdminPass()) {
     document.getElementById('admin-login').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-    loadConfig();
-    populateForm();
+    // Check if gist is configured
+    if (!getGistId()) {
+      document.getElementById('setup-gist').style.display = 'flex';
+    } else {
+      openPanel();
+    }
   } else {
     const err = document.getElementById('admin-err');
     err.style.display = 'block';
@@ -473,7 +595,52 @@ function adminLogin() {
 function adminLogout() {
   document.getElementById('admin-login').style.display = 'flex';
   document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('setup-gist').style.display = 'none';
   document.getElementById('admin-pass').value = '';
+}
+
+async function openPanel() {
+  showLoading('Memuat data dari cloud...');
+  try {
+    const remote = await gistLoad();
+    config = Object.assign(defaultConfig(), remote);
+  } catch(e) {
+    console.warn('Gist load failed:', e.message);
+    // fallback ke localStorage
+    try {
+      const local = localStorage.getItem(CONFIG_KEY);
+      if (local) config = Object.assign(defaultConfig(), JSON.parse(local));
+    } catch(_) {}
+    showToast('⚠️ Gagal load dari Gist, pakai data lokal');
+  }
+  hideLoading();
+  document.getElementById('setup-gist').style.display = 'none';
+  document.getElementById('admin-panel').style.display = 'block';
+  populateForm();
+  // Show gist settings
+  document.getElementById('gist-id-input').value = getGistId();
+  document.getElementById('gh-token-input').value = getGhToken();
+}
+
+// =============================================
+// SETUP GIST (first time)
+// =============================================
+function saveGistSetup() {
+  const id    = document.getElementById('setup-gist-id').value.trim();
+  const token = document.getElementById('setup-gh-token').value.trim();
+  if (!id || !token) { showToast('❌ Isi Gist ID dan Token dulu!'); return; }
+  localStorage.setItem(GIST_ID_KEY, id);
+  localStorage.setItem(GH_TOKEN_KEY, token);
+  openPanel();
+}
+
+function updateGistSettings() {
+  const id    = document.getElementById('gist-id-input').value.trim();
+  const token = document.getElementById('gh-token-input').value.trim();
+  if (!id) { showToast('❌ Gist ID tidak boleh kosong!'); return; }
+  localStorage.setItem(GIST_ID_KEY, id);
+  if (token) localStorage.setItem(GH_TOKEN_KEY, token);
+  showToast('✅ Pengaturan Gist diperbarui!');
 }
 
 // =============================================
@@ -491,13 +658,15 @@ function populateForm() {
   updatePinDisplay();
   renderMessages();
   renderWishes();
-  restoreMusicUI();
-  
+
   // Photo
   if (config.photo) {
     document.getElementById('admin-photo-preview').src = config.photo;
     document.getElementById('admin-photo-preview').style.display = 'block';
     document.getElementById('admin-photo-placeholder').style.display = 'none';
+  } else {
+    document.getElementById('admin-photo-preview').style.display = 'none';
+    document.getElementById('admin-photo-placeholder').style.display = 'block';
   }
 }
 
@@ -516,7 +685,7 @@ function renderMessages() {
     editor.innerHTML += `
     <div class="msg-item" id="msg-item-${i}">
       <button class="msg-del" onclick="deleteMsg(${i})" title="Hapus">✕</button>
-      <label>Label (contoh: "Pesan Untukmu")</label>
+      <label>Label</label>
       <input type="text" value="${escHtml(m.label||'')}" oninput="config.messages[${i}].label=this.value" placeholder="Label pesan">
       <label>Isi Pesan</label>
       <textarea oninput="config.messages[${i}].text=this.value" placeholder="Tulis pesanmu di sini...">${escHtml(m.text||'')}</textarea>
@@ -573,14 +742,14 @@ function deleteWish(i) {
 function handleAdminPhoto(e) {
   const f = e.target.files[0];
   if (!f) return;
-  if (f.size > 5*1024*1024) { showToast('❌ File terlalu besar! Maks 5MB'); return; }
+  if (f.size > 2*1024*1024) { showToast('❌ File terlalu besar! Maks 2MB untuk Gist'); return; }
   const r = new FileReader();
   r.onload = ev => {
     config.photo = ev.target.result;
     document.getElementById('admin-photo-preview').src = ev.target.result;
     document.getElementById('admin-photo-preview').style.display = 'block';
     document.getElementById('admin-photo-placeholder').style.display = 'none';
-    showToast('✅ Foto berhasil diupload!');
+    showToast('✅ Foto berhasil diupload! Klik Simpan Semua.');
   };
   r.readAsDataURL(f);
 }
@@ -594,106 +763,8 @@ function clearPhoto() {
 }
 
 // =============================================
-// INDEXED DB — sama persis dengan index.html
+// MUSIC URL
 // =============================================
-const DB_NAME = 'bdayDB', DB_VER = 1, STORE = 'files';
-let db = null;
-
-function openDB() {
-  return new Promise((res, rej) => {
-    if (db) return res(db);
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
-    req.onsuccess = e => { db = e.target.result; res(db); };
-    req.onerror = () => rej(req.error);
-  });
-}
-
-function dbSet(key, value) {
-  return openDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(value, key);
-    tx.oncomplete = () => res();
-    tx.onerror = () => rej(tx.error);
-  }));
-}
-
-function dbGet(key) {
-  return openDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readonly');
-    const req = tx.objectStore(STORE).get(key);
-    req.onsuccess = () => res(req.result);
-    req.onerror = () => rej(req.error);
-  }));
-}
-
-function dbDelete(key) {
-  return openDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).delete(key);
-    tx.oncomplete = () => res();
-    tx.onerror = () => rej(tx.error);
-  }));
-}
-
-// =============================================
-// MUSIC
-// =============================================
-let musicTab = 'file';
-
-function switchMusicTab(tab, btn) {
-  musicTab = tab;
-  document.querySelectorAll('.music-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('music-url-tab').style.display = tab === 'url' ? 'block' : 'none';
-  document.getElementById('music-file-tab').style.display = tab === 'file' ? 'block' : 'none';
-}
-
-function handleMusicFile(e) {
-  const f = e.target.files[0];
-  if (!f) return;
-  if (f.size > 30 * 1024 * 1024) { showToast('❌ File terlalu besar! Maks 30MB'); return; }
-  showToast('⏳ Menyimpan musik ke browser...');
-
-  // Simpan sebagai Blob ke IndexedDB (bukan base64!)
-  dbSet('audio', f).then(() => {
-    // Update config metadata (TANPA url blob — cukup flag 'file')
-    config.music = config.music || {};
-    config.music.url = '';       // kosong — audio ada di IndexedDB
-    config.music.type = 'file';
-    if (!document.getElementById('cfg-music-title').value) {
-      const title = f.name.replace(/\.[^/.]+$/, '');
-      document.getElementById('cfg-music-title').value = title;
-      config.music.title = title;
-    }
-    // Preview player pakai object URL sementara
-    const preview = document.getElementById('music-preview');
-    const objUrl = URL.createObjectURL(f);
-    preview.src = objUrl;
-    preview.style.display = 'block';
-    document.getElementById('music-filename').innerHTML =
-      `✅ <strong>${f.name}</strong><br><small style="color:#888">${(f.size/1024/1024).toFixed(2)} MB — tersimpan di browser</small>`;
-    document.getElementById('music-clear-btn').style.display = 'block';
-    showToast('✅ Musik tersimpan! Tekan ▶ di bawah untuk test.');
-  }).catch(err => {
-    console.error(err);
-    showToast('❌ Gagal menyimpan musik. Coba lagi.');
-  });
-}
-
-function clearMusic() {
-  dbDelete('audio').catch(()=>{});
-  config.music = { url: '', title: '', type: '' };
-  document.getElementById('music-preview').style.display = 'none';
-  document.getElementById('music-preview').src = '';
-  document.getElementById('music-clear-btn').style.display = 'none';
-  document.getElementById('music-filename').innerHTML =
-    'Klik untuk upload MP3 / OGG / WAV<br><small style="color:#bbb">Maks ~30MB. Disimpan langsung di browser.</small>';
-  document.getElementById('admin-music-input').value = '';
-  document.getElementById('cfg-music-title').value = '';
-  showToast('🗑️ Musik dihapus');
-}
-
 function testMusicUrl() {
   const url = document.getElementById('cfg-music-url').value.trim();
   if (!url) { showToast('❌ Masukkan URL musik dulu!'); return; }
@@ -701,66 +772,55 @@ function testMusicUrl() {
   preview.src = url;
   preview.style.display = 'block';
   preview.play().then(() => showToast('✅ URL bisa diputar!'))
-    .catch(() => showToast('❌ URL gagal diputar (CORS). Pakai upload file saja.'));
-}
-
-// Restore music UI saat buka admin
-function restoreMusicUI() {
-  dbGet('audio').then(blob => {
-    if (!blob) return;
-    switchMusicTab('file', document.getElementById('tab-file-btn'));
-    const objUrl = URL.createObjectURL(blob);
-    const preview = document.getElementById('music-preview');
-    preview.src = objUrl;
-    preview.style.display = 'block';
-    document.getElementById('music-clear-btn').style.display = 'block';
-    const title = (config.music && config.music.title) || 'Musik tersimpan';
-    document.getElementById('music-filename').innerHTML =
-      `✅ <strong>${title}</strong><br><small style="color:#888">Audio tersimpan di browser</small>`;
-    if (!document.getElementById('cfg-music-title').value) {
-      document.getElementById('cfg-music-title').value = title;
-    }
-  }).catch(() => {
-    // Tidak ada audio di IndexedDB, cek apakah ada URL
-    if (config.music && config.music.url && config.music.type === 'url') {
-      switchMusicTab('url', document.getElementById('tab-url-btn'));
-      document.getElementById('cfg-music-url').value = config.music.url;
-    }
-  });
+    .catch(() => showToast('❌ URL gagal diputar (mungkin CORS). Coba URL lain.'));
 }
 
 // =============================================
 // SAVE ALL
 // =============================================
-function saveAll() {
-  config.name = document.getElementById('cfg-name').value;
-  config.age = document.getElementById('cfg-age').value;
-  config.pin = document.getElementById('cfg-pin').value || '0101';
-  config.pinHint = document.getElementById('cfg-pin-hint').value;
+async function saveAll() {
+  const btn = document.getElementById('btn-save-main');
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyimpan...';
+
+  config.name        = document.getElementById('cfg-name').value;
+  config.age         = document.getElementById('cfg-age').value;
+  config.pin         = document.getElementById('cfg-pin').value || '0101';
+  config.pinHint     = document.getElementById('cfg-pin-hint').value;
   config.flowerCount = parseInt(document.getElementById('cfg-flower-count').value) || 7;
-  config.footerFrom = document.getElementById('cfg-footer').value;
-  config.music = config.music || {};
+  config.footerFrom  = document.getElementById('cfg-footer').value;
+  config.music       = config.music || {};
   config.music.title = document.getElementById('cfg-music-title').value;
-  // Kalau tab URL aktif, simpan URL-nya (audio file sudah tersimpan di IndexedDB oleh handleMusicFile)
-  if (musicTab === 'url') {
-    const urlVal = document.getElementById('cfg-music-url').value.trim();
-    config.music.url = urlVal;
-    config.music.type = 'url';
+  const urlVal = document.getElementById('cfg-music-url').value.trim();
+  config.music.url   = urlVal;
+  config.music.type  = urlVal ? 'url' : '';
+
+  // Save locally as backup
+  try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch(_) {}
+
+  // Save to Gist
+  try {
+    await gistSave(config);
+    showToast('✅ Tersimpan ke cloud! Semua device akan langsung terupdate.');
+  } catch(e) {
+    console.error('Gist save error:', e);
+    showToast('⚠️ Gagal simpan ke Gist: ' + e.message + ' (tersimpan lokal saja)');
   }
-  saveConfig();
-  showToast('✅ Semua perubahan berhasil disimpan!');
+
+  btn.disabled = false;
+  btn.textContent = '💾 Simpan Semua';
 }
 
 // =============================================
 // CHANGE ADMIN PASS
 // =============================================
 function changeAdminPass() {
-  const old = document.getElementById('old-pass').value;
-  const nw = document.getElementById('new-pass').value;
+  const old     = document.getElementById('old-pass').value;
+  const nw      = document.getElementById('new-pass').value;
   const confirm = document.getElementById('confirm-pass').value;
   if (old !== getAdminPass()) { showToast('❌ Password lama salah!'); return; }
-  if (nw.length < 4) { showToast('❌ Password minimal 4 karakter!'); return; }
-  if (nw !== confirm) { showToast('❌ Konfirmasi password tidak cocok!'); return; }
+  if (nw.length < 4)          { showToast('❌ Password minimal 4 karakter!'); return; }
+  if (nw !== confirm)         { showToast('❌ Konfirmasi password tidak cocok!'); return; }
   localStorage.setItem(ADMIN_PASS_KEY, nw);
   document.getElementById('old-pass').value = '';
   document.getElementById('new-pass').value = '';
@@ -769,53 +829,37 @@ function changeAdminPass() {
 }
 
 // =============================================
-// EXPORT / IMPORT / RESET
+// RESET
 // =============================================
-function exportConfig() {
-  const dataStr = JSON.stringify(config, null, 2);
-  const blob = new Blob([dataStr], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'birthday-config.json';
-  a.click(); URL.revokeObjectURL(url);
-  showToast('📤 Config berhasil diekspor!');
-}
-
-function importConfig(e) {
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const parsed = JSON.parse(ev.target.result);
-      config = Object.assign(defaultConfig(), parsed);
-      saveConfig();
-      populateForm();
-      showToast('📥 Config berhasil diimpor!');
-    } catch(err) {
-      showToast('❌ File JSON tidak valid!');
-    }
-  };
-  r.readAsText(f);
-}
-
-function resetAll() {
-  if (!confirm('⚠️ Reset semua ke default? Data foto, musik, dan pesan akan hilang!')) return;
-  localStorage.removeItem(CONFIG_KEY);
-  dbDelete('audio').catch(()=>{});
+async function resetAll() {
+  if (!confirm('⚠️ Reset semua ke default? Data foto dan pesan akan hilang!')) return;
   config = defaultConfig();
+  try { localStorage.removeItem(CONFIG_KEY); } catch(_) {}
+  try {
+    await gistSave(config);
+    showToast('🔄 Reset ke default berhasil dan tersimpan ke cloud!');
+  } catch(e) {
+    showToast('🔄 Reset lokal berhasil, gagal sync ke Gist: ' + e.message);
+  }
   populateForm();
-  showToast('🔄 Reset ke default berhasil!');
 }
 
 // =============================================
 // UTILS
 // =============================================
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Memuat...';
+  document.getElementById('loading-overlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), 3500);
 }
 
 function escHtml(str) {
