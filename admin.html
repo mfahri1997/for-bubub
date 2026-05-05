@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel 🔧 Birthday Website</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5C842;
+    --gold-light: #FFF3B0;
+    --gold-dark: #C9971A;
+    --rose: #FF6B8A;
+    --cream: #FFFDF0;
+    --brown: #6B3A2A;
+    --text: #3D2B1F;
+    --text-light: #8B6254;
+    --border: #E8D9A0;
+    --bg2: #FFFBEE;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #FFF9E6; color: var(--text); min-height: 100vh; }
+
+  /* ADMIN LOGIN */
+  #admin-login {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FFFDF0, #FFF3B0, #FFE4EC);
+  }
+  .login-box {
+    background: white;
+    border: 2px solid var(--gold);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 380px; width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(245,200,66,0.25);
+  }
+  .login-box h1 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--brown); margin-bottom: 8px; }
+  .login-box p { font-size: 14px; color: var(--text-light); margin-bottom: 28px; }
+  .login-input {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 16px; font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none; margin-bottom: 16px;
+    transition: border 0.2s;
+    background: var(--cream);
+  }
+  .login-input:focus { border-color: var(--gold); }
+  .login-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 500; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(201,151,26,0.4);
+  }
+  .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(201,151,26,0.5); }
+  .login-err { color: #FF4444; font-size: 13px; margin-top: 8px; display: none; }
+
+  /* ADMIN PANEL */
+  #admin-panel { display: none; }
+  
+  .admin-header {
+    background: white;
+    border-bottom: 2px solid var(--gold-light);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(245,200,66,0.15);
+  }
+  .admin-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--brown); display: flex; align-items: center; gap: 10px; }
+  .admin-actions { display: flex; gap: 10px; }
+  .btn-save {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white; border: none; padding: 10px 24px;
+    border-radius: 50px; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; box-shadow: 0 3px 12px rgba(201,151,26,0.4);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-save:hover { transform: translateY(-1px); }
+  .btn-preview {
+    background: white; color: var(--gold-dark);
+    border: 1.5px solid var(--gold); padding: 10px 20px;
+    border-radius: 50px; font-size: 14px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-preview:hover { background: var(--gold-light); }
+  .btn-logout {
+    background: none; border: 1px solid #ddd; color: #999;
+    padding: 8px 16px; border-radius: 50px; cursor: pointer; font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-logout:hover { color: var(--rose); border-color: var(--rose); }
+
+  .admin-body {
+    max-width: 960px; margin: 0 auto;
+    padding: 32px 24px 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media(max-width: 720px) { .admin-body { grid-template-columns: 1fr; } }
+
+  .section-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    box-shadow: 0 2px 12px rgba(245,200,66,0.1);
+  }
+  .section-card.full-width { grid-column: 1 / -1; }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: var(--brown);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gold-light);
+  }
+
+  label { font-size: 13px; font-weight: 500; color: var(--text-light); display: block; margin-bottom: 6px; margin-top: 14px; letter-spacing: 0.5px; }
+  label:first-child { margin-top: 0; }
+  input[type=text], input[type=number], input[type=password], input[type=url], textarea, select {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 15px;
+    font-family: 'DM Sans', sans-serif; color: var(--text);
+    background: var(--cream); outline: none;
+    transition: border 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+
+  /* MESSAGES EDITOR */
+  .msg-item {
+    border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 16px;
+    margin-bottom: 12px; background: var(--bg2);
+    position: relative;
+  }
+  .msg-del {
+    position: absolute; top: 10px; right: 10px;
+    background: none; border: 1px solid #FFB3C0;
+    color: var(--rose); border-radius: 50%;
+    width: 28px; height: 28px; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .msg-del:hover { background: #FFE4EC; }
+  .add-btn {
+    background: var(--gold-light); color: var(--gold-dark);
+    border: 1.5px dashed var(--gold); border-radius: 10px;
+    padding: 10px; width: 100%; cursor: pointer;
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; margin-top: 4px;
+  }
+  .add-btn:hover { background: var(--gold); color: white; }
+
+  /* WISHES EDITOR */
+  .wishes-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .wish-chip {
+    background: var(--gold-light); border: 1.5px solid var(--gold);
+    border-radius: 50px; padding: 6px 14px;
+    font-size: 14px; display: flex; align-items: center; gap: 6px;
+    color: var(--brown);
+  }
+  .wish-chip span { cursor: pointer; color: var(--rose); font-size: 16px; line-height: 1; }
+  .wish-add-row { display: flex; gap: 8px; }
+  .wish-input { flex: 1; }
+  .wish-add-btn {
+    background: var(--gold); color: white; border: none;
+    border-radius: 10px; padding: 8px 16px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .wish-add-btn:hover { background: var(--gold-dark); }
+
+  /* PHOTO UPLOAD */
+  .photo-upload-area {
+    border: 2px dashed var(--gold);
+    border-radius: 16px; padding: 32px;
+    text-align: center; cursor: pointer;
+    background: var(--gold-light);
+    transition: all 0.3s; position: relative;
+    overflow: hidden;
+  }
+  .photo-upload-area:hover { background: #fff3a0; }
+  .photo-upload-area img { max-height: 200px; border-radius: 12px; display: none; }
+  .photo-placeholder-txt { font-size: 40px; margin-bottom: 8px; }
+  .photo-caption { font-size: 14px; color: var(--text-light); }
+  #admin-photo-input { display: none; }
+
+  /* MUSIC SECTION */
+  .music-tabs { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .music-tab {
+    flex: 1; padding: 8px; text-align: center; cursor: pointer;
+    font-size: 13px; color: var(--text-light); background: var(--cream);
+    transition: all 0.2s; border: none; font-family: 'DM Sans', sans-serif;
+  }
+  .music-tab.active { background: var(--gold); color: white; font-weight: 500; }
+
+  /* SAVE TOAST */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: #333; color: white; padding: 12px 28px;
+    border-radius: 50px; font-size: 14px; z-index: 9999;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* PIN Display */
+  .pin-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--brown);
+    letter-spacing: 12px;
+    background: var(--gold-light);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 50px;
+    font-size: 12px; font-weight: 500;
+  }
+  .badge-live { background: #DCFCE7; color: #166534; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* RESET BTN */
+  .btn-reset {
+    background: none; border: 1px solid #ddd; color: #bbb;
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    font-size: 12px; font-family: 'DM Sans', sans-serif;
+    margin-top: 16px; transition: all 0.2s;
+  }
+  .btn-reset:hover { color: var(--rose); border-color: var(--rose); }
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div id="admin-login">
+  <div class="login-box">
+    <div style="font-size:48px; margin-bottom:16px">🔐</div>
+    <h1>Admin Panel</h1>
+    <p>Masukkan password admin untuk mengakses pengaturan</p>
+    <input type="password" class="login-input" id="admin-pass" placeholder="Password Admin" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="login-btn" onclick="adminLogin()">Masuk →</button>
+    <div class="login-err" id="admin-err">Password salah! Coba lagi.</div>
+    <p style="font-size:11px;color:#ccc;margin-top:20px">Default: admin123</p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <div class="admin-logo">
+      🌸 <span>Admin Panel</span>
+      <span class="status-badge badge-live"><span class="badge-dot"></span>Live</span>
+    </div>
+    <div class="admin-actions">
+      <button class="btn-preview" onclick="window.open('index.html','_blank')">👀 Preview</button>
+      <button class="btn-save" onclick="saveAll()">💾 Simpan Semua</button>
+      <button class="btn-logout" onclick="adminLogout()">Keluar</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    
+    <!-- IDENTITAS -->
+    <div class="section-card">
+      <div class="section-title">💛 Identitas</div>
+      
+      <label>Nama Pacar</label>
+      <input type="text" id="cfg-name" placeholder="Nama pacar kamu..." value="">
+
+      <div class="row2">
+        <div>
+          <label>Umur ke-</label>
+          <input type="number" id="cfg-age" placeholder="21" min="1" max="100">
+        </div>
+        <div>
+          <label>Teks Footer</label>
+          <input type="text" id="cfg-footer" placeholder="— Dari yang menyayangimu">
+        </div>
+      </div>
+    </div>
+
+    <!-- PIN & BUNGA -->
+    <div class="section-card">
+      <div class="section-title">🔐 Kode PIN & Bunga</div>
+      
+      <label>Kode PIN (4 digit)</label>
+      <input type="text" id="cfg-pin" maxlength="4" placeholder="0101" oninput="updatePinDisplay()">
+      <div class="pin-display" id="pin-display">••••</div>
+      
+      <label>Petunjuk PIN</label>
+      <input type="text" id="cfg-pin-hint" placeholder="Tanggal jadian kita 💕">
+      
+      <label>Jumlah Bunga yang Harus Dipetik</label>
+      <input type="number" id="cfg-flower-count" min="1" max="20" placeholder="7">
+    </div>
+
+    <!-- FOTO -->
+    <div class="section-card">
+      <div class="section-title">📸 Foto Pacar</div>
+      <div class="photo-upload-area" onclick="document.getElementById('admin-photo-input').click()">
+        <img id="admin-photo-preview" alt="Preview">
+        <div id="admin-photo-placeholder">
+          <div class="photo-placeholder-txt">🌸</div>
+          <div class="photo-caption">Klik untuk upload foto<br><small style="color:#bbb">JPG, PNG, WEBP (maks 5MB)</small></div>
+        </div>
+      </div>
+      <input type="file" id="admin-photo-input" accept="image/*" onchange="handleAdminPhoto(event)">
+      <button class="btn-reset" onclick="clearPhoto()">🗑️ Hapus Foto</button>
+    </div>
+
+    <!-- MUSIK -->
+    <div class="section-card">
+      <div class="section-title">🎵 Musik Latar</div>
+      <div class="music-tabs">
+        <button class="music-tab active" id="tab-file-btn" onclick="switchMusicTab('file', this)">⭐ Upload File (Rekomendasi)</button>
+        <button class="music-tab" id="tab-url-btn" onclick="switchMusicTab('url', this)">Link URL</button>
+      </div>
+      
+      <!-- TAB: UPLOAD FILE (recommended) -->
+      <div id="music-file-tab">
+        <div style="background:#FFF8E1;border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--brown)">
+          ⭐ <strong>Direkomendasikan:</strong> Upload file MP3 langsung agar musik pasti bisa diputar di semua browser tanpa masalah CORS.
+        </div>
+        <div class="photo-upload-area" onclick="document.getElementById('admin-music-input').click()" style="padding:20px">
+          <div class="photo-placeholder-txt" style="font-size:28px">🎵</div>
+          <div class="photo-caption" id="music-filename">Klik untuk upload MP3 / OGG / WAV<br><small style="color:#bbb">Maks ~10MB. File disimpan di browser.</small></div>
+        </div>
+        <input type="file" id="admin-music-input" accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4,audio/*" style="display:none" onchange="handleMusicFile(event)">
+        <audio id="music-preview" controls style="width:100%;margin-top:10px;border-radius:8px;display:none"></audio>
+        <button class="add-btn" id="music-clear-btn" onclick="clearMusic()" style="display:none;margin-top:6px">🗑️ Hapus Musik</button>
+      </div>
+
+      <!-- TAB: URL -->
+      <div id="music-url-tab" style="display:none">        <div style="background:#FFF0F0;border:1px solid #FFB3B3;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#993333">
+          ⚠️ <strong>Catatan:</strong> URL eksternal sering diblokir browser (CORS). Gunakan URL yang <em>benar-benar direct link</em> ke file audio (bukan halaman streaming).
+        </div>
+        <label>Direct URL ke file audio (MP3/OGG)</label>
+        <input type="url" id="cfg-music-url" placeholder="https://example.com/lagu.mp3">
+        <button class="add-btn" onclick="testMusicUrl()" style="margin-top:8px">▶ Test Putar URL</button>
+        <audio id="music-url-preview" controls style="width:100%;margin-top:8px;border-radius:8px;display:none"></audio>
+      </div>
+
+      <label style="margin-top:16px">Judul Lagu (ditampilkan di website)</label>
+      <input type="text" id="cfg-music-title" placeholder="Nama lagu / judul musik">
+    </div>
+
+    <!-- PESAN -->
+    <div class="section-card full-width">
+      <div class="section-title">💌 Pesan, Doa & Harapan</div>
+      <div id="messages-editor"></div>
+      <button class="add-btn" onclick="addMessage()">+ Tambah Pesan</button>
+    </div>
+
+    <!-- WISHES -->
+    <div class="section-card full-width">
+      <div class="section-title">✨ Doa & Harapan (Tag)</div>
+      <div class="wishes-grid" id="wishes-grid"></div>
+      <div class="wish-add-row">
+        <input type="text" class="wish-input" id="wish-new" placeholder="Tambah harapan baru..." onkeydown="if(event.key==='Enter')addWish()">
+        <button class="wish-add-btn" onclick="addWish()">+ Tambah</button>
+      </div>
+    </div>
+
+    <!-- ADMIN PASSWORD -->
+    <div class="section-card">
+      <div class="section-title">🔑 Ganti Password Admin</div>
+      <label>Password Admin Saat Ini</label>
+      <input type="password" id="old-pass" placeholder="Password lama">
+      <label>Password Admin Baru</label>
+      <input type="password" id="new-pass" placeholder="Password baru (min 4 karakter)">
+      <label>Konfirmasi Password Baru</label>
+      <input type="password" id="confirm-pass" placeholder="Ulangi password baru">
+      <button class="btn-save" style="margin-top:16px;width:100%;justify-content:center" onclick="changeAdminPass()">Ganti Password</button>
+    </div>
+
+    <!-- RESET -->
+    <div class="section-card">
+      <div class="section-title">⚙️ Utilitas</div>
+      <p style="font-size:14px;color:var(--text-light);margin-bottom:16px">Kelola data website birthday</p>
+      <button class="btn-preview" style="width:100%;justify-content:center;margin-bottom:10px" onclick="exportConfig()">📤 Export Config (JSON)</button>
+      <label for="import-file" style="display:block">Import Config (JSON)</label>
+      <input type="file" id="import-file" accept=".json" onchange="importConfig(event)">
+      <button class="btn-reset" onclick="resetAll()" style="color:#FF4444;border-color:#FF4444">🗑️ Reset Semua ke Default</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================
+// CONFIG DEFAULTS
+// =============================================
+const ADMIN_PASS_KEY = 'bday_admin_pass';
+const CONFIG_KEY = 'bday_config';
+
+function getAdminPass() {
+  return localStorage.getItem(ADMIN_PASS_KEY) || 'admin123';
+}
+
+function defaultConfig() {
+  return {
+    name: "Sayang",
+    age: "",
+    pin: "0101",
+    pinHint: "Tanggal jadian kita 💕",
+    flowerCount: 7,
+    messages: [
+      { label: "Pesan Untukmu", text: "Selamat ulang tahun, cintaku! Semoga hari ini menjadi hari yang paling indah dalam hidupmu. Kamu adalah cahaya yang menerangi setiap hari-hariku. ❤️", from: "— Yang selalu mencintaimu" },
+      { label: "Doa & Harapan", text: "Semoga panjang umur, selalu sehat, bahagia, dan semua impianmu tercapai satu per satu. Aku akan selalu ada untukmu di setiap langkah perjalananmu. 🌟", from: "" },
+      { label: "Janji Setia", text: "Aku berjanji akan terus berada di sisimu, mencintaimu setiap hari, dan membuat setiap momen bersamamu tak terlupakan. Kamu adalah segalanya bagiku. 💫", from: "" }
+    ],
+    wishes: ["Sehat Selalu", "Panjang Umur", "Bahagia Selalu", "Sukses", "Dicintai", "Dilindungi"],
+    music: { url: "", title: "Lagu Cinta Kita" },
+    photo: "",
+    footerFrom: "— Dari yang selalu menyayangimu",
+  };
+}
+
+let config = defaultConfig();
+
+function loadConfig() {
+  try {
+    const s = localStorage.getItem(CONFIG_KEY);
+    if (s) config = Object.assign(defaultConfig(), JSON.parse(s));
+  } catch(e) {}
+}
+
+function saveConfig() {
+  try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch(e) {}
+}
+
+// =============================================
+// ADMIN LOGIN
+// =============================================
+function adminLogin() {
+  const pass = document.getElementById('admin-pass').value;
+  if (pass === getAdminPass()) {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadConfig();
+    populateForm();
+  } else {
+    const err = document.getElementById('admin-err');
+    err.style.display = 'block';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function adminLogout() {
+  document.getElementById('admin-login').style.display = 'flex';
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-pass').value = '';
+}
+
+// =============================================
+// FORM POPULATION
+// =============================================
+function populateForm() {
+  document.getElementById('cfg-name').value = config.name || '';
+  document.getElementById('cfg-age').value = config.age || '';
+  document.getElementById('cfg-pin').value = config.pin || '0101';
+  document.getElementById('cfg-pin-hint').value = config.pinHint || '';
+  document.getElementById('cfg-flower-count').value = config.flowerCount || 7;
+  document.getElementById('cfg-music-url').value = (config.music && config.music.url) || '';
+  document.getElementById('cfg-music-title').value = (config.music && config.music.title) || '';
+  document.getElementById('cfg-footer').value = config.footerFrom || '';
+  updatePinDisplay();
+  renderMessages();
+  renderWishes();
+  restoreMusicUI();
+  
+  // Photo
+  if (config.photo) {
+    document.getElementById('admin-photo-preview').src = config.photo;
+    document.getElementById('admin-photo-preview').style.display = 'block';
+    document.getElementById('admin-photo-placeholder').style.display = 'none';
+  }
+}
+
+function updatePinDisplay() {
+  const val = document.getElementById('cfg-pin').value || '••••';
+  document.getElementById('pin-display').textContent = val.padEnd(4, '•');
+}
+
+// =============================================
+// MESSAGES
+// =============================================
+function renderMessages() {
+  const editor = document.getElementById('messages-editor');
+  editor.innerHTML = '';
+  (config.messages || []).forEach((m, i) => {
+    editor.innerHTML += `
+    <div class="msg-item" id="msg-item-${i}">
+      <button class="msg-del" onclick="deleteMsg(${i})" title="Hapus">✕</button>
+      <label>Label (contoh: "Pesan Untukmu")</label>
+      <input type="text" value="${escHtml(m.label||'')}" oninput="config.messages[${i}].label=this.value" placeholder="Label pesan">
+      <label>Isi Pesan</label>
+      <textarea oninput="config.messages[${i}].text=this.value" placeholder="Tulis pesanmu di sini...">${escHtml(m.text||'')}</textarea>
+      <label>Dari (opsional)</label>
+      <input type="text" value="${escHtml(m.from||'')}" oninput="config.messages[${i}].from=this.value" placeholder="— Dari: nama kamu">
+    </div>`;
+  });
+}
+
+function addMessage() {
+  config.messages = config.messages || [];
+  config.messages.push({ label: "Pesan Baru", text: "", from: "" });
+  renderMessages();
+}
+
+function deleteMsg(i) {
+  if (config.messages.length <= 1) { showToast('❌ Minimal 1 pesan!'); return; }
+  config.messages.splice(i, 1);
+  renderMessages();
+}
+
+// =============================================
+// WISHES
+// =============================================
+function renderWishes() {
+  const grid = document.getElementById('wishes-grid');
+  grid.innerHTML = '';
+  (config.wishes || []).forEach((w, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'wish-chip';
+    chip.innerHTML = `✨ ${escHtml(w)} <span onclick="deleteWish(${i})">×</span>`;
+    grid.appendChild(chip);
+  });
+}
+
+function addWish() {
+  const inp = document.getElementById('wish-new');
+  const val = inp.value.trim();
+  if (!val) return;
+  config.wishes = config.wishes || [];
+  config.wishes.push(val);
+  inp.value = '';
+  renderWishes();
+}
+
+function deleteWish(i) {
+  config.wishes.splice(i, 1);
+  renderWishes();
+}
+
+// =============================================
+// PHOTO
+// =============================================
+function handleAdminPhoto(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  if (f.size > 5*1024*1024) { showToast('❌ File terlalu besar! Maks 5MB'); return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    config.photo = ev.target.result;
+    document.getElementById('admin-photo-preview').src = ev.target.result;
+    document.getElementById('admin-photo-preview').style.display = 'block';
+    document.getElementById('admin-photo-placeholder').style.display = 'none';
+    showToast('✅ Foto berhasil diupload!');
+  };
+  r.readAsDataURL(f);
+}
+
+function clearPhoto() {
+  config.photo = '';
+  document.getElementById('admin-photo-preview').style.display = 'none';
+  document.getElementById('admin-photo-placeholder').style.display = 'block';
+  document.getElementById('admin-photo-input').value = '';
+  showToast('🗑️ Foto dihapus');
+}
+
+// =============================================
+// INDEXED DB — sama persis dengan index.html
+// =============================================
+const DB_NAME = 'bdayDB', DB_VER = 1, STORE = 'files';
+let db = null;
+
+function openDB() {
+  return new Promise((res, rej) => {
+    if (db) return res(db);
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbSet(key, value) {
+  return openDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(value, key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  }));
+}
+
+function dbGet(key) {
+  return openDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).get(key);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  }));
+}
+
+function dbDelete(key) {
+  return openDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  }));
+}
+
+// =============================================
+// MUSIC
+// =============================================
+let musicTab = 'file';
+
+function switchMusicTab(tab, btn) {
+  musicTab = tab;
+  document.querySelectorAll('.music-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('music-url-tab').style.display = tab === 'url' ? 'block' : 'none';
+  document.getElementById('music-file-tab').style.display = tab === 'file' ? 'block' : 'none';
+}
+
+function handleMusicFile(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  if (f.size > 30 * 1024 * 1024) { showToast('❌ File terlalu besar! Maks 30MB'); return; }
+  showToast('⏳ Menyimpan musik ke browser...');
+
+  // Simpan sebagai Blob ke IndexedDB (bukan base64!)
+  dbSet('audio', f).then(() => {
+    // Update config metadata (TANPA url blob — cukup flag 'file')
+    config.music = config.music || {};
+    config.music.url = '';       // kosong — audio ada di IndexedDB
+    config.music.type = 'file';
+    if (!document.getElementById('cfg-music-title').value) {
+      const title = f.name.replace(/\.[^/.]+$/, '');
+      document.getElementById('cfg-music-title').value = title;
+      config.music.title = title;
+    }
+    // Preview player pakai object URL sementara
+    const preview = document.getElementById('music-preview');
+    const objUrl = URL.createObjectURL(f);
+    preview.src = objUrl;
+    preview.style.display = 'block';
+    document.getElementById('music-filename').innerHTML =
+      `✅ <strong>${f.name}</strong><br><small style="color:#888">${(f.size/1024/1024).toFixed(2)} MB — tersimpan di browser</small>`;
+    document.getElementById('music-clear-btn').style.display = 'block';
+    showToast('✅ Musik tersimpan! Tekan ▶ di bawah untuk test.');
+  }).catch(err => {
+    console.error(err);
+    showToast('❌ Gagal menyimpan musik. Coba lagi.');
+  });
+}
+
+function clearMusic() {
+  dbDelete('audio').catch(()=>{});
+  config.music = { url: '', title: '', type: '' };
+  document.getElementById('music-preview').style.display = 'none';
+  document.getElementById('music-preview').src = '';
+  document.getElementById('music-clear-btn').style.display = 'none';
+  document.getElementById('music-filename').innerHTML =
+    'Klik untuk upload MP3 / OGG / WAV<br><small style="color:#bbb">Maks ~30MB. Disimpan langsung di browser.</small>';
+  document.getElementById('admin-music-input').value = '';
+  document.getElementById('cfg-music-title').value = '';
+  showToast('🗑️ Musik dihapus');
+}
+
+function testMusicUrl() {
+  const url = document.getElementById('cfg-music-url').value.trim();
+  if (!url) { showToast('❌ Masukkan URL musik dulu!'); return; }
+  const preview = document.getElementById('music-url-preview');
+  preview.src = url;
+  preview.style.display = 'block';
+  preview.play().then(() => showToast('✅ URL bisa diputar!'))
+    .catch(() => showToast('❌ URL gagal diputar (CORS). Pakai upload file saja.'));
+}
+
+// Restore music UI saat buka admin
+function restoreMusicUI() {
+  dbGet('audio').then(blob => {
+    if (!blob) return;
+    switchMusicTab('file', document.getElementById('tab-file-btn'));
+    const objUrl = URL.createObjectURL(blob);
+    const preview = document.getElementById('music-preview');
+    preview.src = objUrl;
+    preview.style.display = 'block';
+    document.getElementById('music-clear-btn').style.display = 'block';
+    const title = (config.music && config.music.title) || 'Musik tersimpan';
+    document.getElementById('music-filename').innerHTML =
+      `✅ <strong>${title}</strong><br><small style="color:#888">Audio tersimpan di browser</small>`;
+    if (!document.getElementById('cfg-music-title').value) {
+      document.getElementById('cfg-music-title').value = title;
+    }
+  }).catch(() => {
+    // Tidak ada audio di IndexedDB, cek apakah ada URL
+    if (config.music && config.music.url && config.music.type === 'url') {
+      switchMusicTab('url', document.getElementById('tab-url-btn'));
+      document.getElementById('cfg-music-url').value = config.music.url;
+    }
+  });
+}
+
+// =============================================
+// SAVE ALL
+// =============================================
+function saveAll() {
+  config.name = document.getElementById('cfg-name').value;
+  config.age = document.getElementById('cfg-age').value;
+  config.pin = document.getElementById('cfg-pin').value || '0101';
+  config.pinHint = document.getElementById('cfg-pin-hint').value;
+  config.flowerCount = parseInt(document.getElementById('cfg-flower-count').value) || 7;
+  config.footerFrom = document.getElementById('cfg-footer').value;
+  config.music = config.music || {};
+  config.music.title = document.getElementById('cfg-music-title').value;
+  // Kalau tab URL aktif, simpan URL-nya (audio file sudah tersimpan di IndexedDB oleh handleMusicFile)
+  if (musicTab === 'url') {
+    const urlVal = document.getElementById('cfg-music-url').value.trim();
+    config.music.url = urlVal;
+    config.music.type = 'url';
+  }
+  saveConfig();
+  showToast('✅ Semua perubahan berhasil disimpan!');
+}
+
+// =============================================
+// CHANGE ADMIN PASS
+// =============================================
+function changeAdminPass() {
+  const old = document.getElementById('old-pass').value;
+  const nw = document.getElementById('new-pass').value;
+  const confirm = document.getElementById('confirm-pass').value;
+  if (old !== getAdminPass()) { showToast('❌ Password lama salah!'); return; }
+  if (nw.length < 4) { showToast('❌ Password minimal 4 karakter!'); return; }
+  if (nw !== confirm) { showToast('❌ Konfirmasi password tidak cocok!'); return; }
+  localStorage.setItem(ADMIN_PASS_KEY, nw);
+  document.getElementById('old-pass').value = '';
+  document.getElementById('new-pass').value = '';
+  document.getElementById('confirm-pass').value = '';
+  showToast('✅ Password admin berhasil diubah!');
+}
+
+// =============================================
+// EXPORT / IMPORT / RESET
+// =============================================
+function exportConfig() {
+  const dataStr = JSON.stringify(config, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'birthday-config.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📤 Config berhasil diekspor!');
+}
+
+function importConfig(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      config = Object.assign(defaultConfig(), parsed);
+      saveConfig();
+      populateForm();
+      showToast('📥 Config berhasil diimpor!');
+    } catch(err) {
+      showToast('❌ File JSON tidak valid!');
+    }
+  };
+  r.readAsText(f);
+}
+
+function resetAll() {
+  if (!confirm('⚠️ Reset semua ke default? Data foto, musik, dan pesan akan hilang!')) return;
+  localStorage.removeItem(CONFIG_KEY);
+  dbDelete('audio').catch(()=>{});
+  config = defaultConfig();
+  populateForm();
+  showToast('🔄 Reset ke default berhasil!');
+}
+
+// =============================================
+// UTILS
+// =============================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Enter to login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('admin-login').style.display !== 'none') adminLogin();
+});
+</script>
+</body>
+</html>
